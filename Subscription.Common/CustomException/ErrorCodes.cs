@@ -83,6 +83,7 @@ namespace Subscription.Common.CustomException
         TemplateNotFound,
         CategoryTemplatesInvalid,
         MailExist,
-        PhoneExist
+        PhoneExist,
+        ProductNotFound
     }
 }

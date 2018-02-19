@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -14,6 +16,7 @@ using Subscription.BLL.DTOs;
 using Subscription.BLL.Services.Interfaces;
 using Subscription.Common.CustomException;
 using Repository.Pattern.UnitOfWork;
+using Subscription.BLL.Services.FormToMail;
 using Subscription.BLL.Services.ManageStorage;
 using Subscription.Common;
 using Subscription.DAL.Entities.Model;
@@ -26,34 +29,38 @@ namespace Subscription.BLL.Services
         private readonly IProductService _productService;
         private readonly IUserService _userService;
         private readonly IProductTranslationService _productTranslationService;
-     //   private readonly IFormToMail _formToMail;
+        private readonly IFormToMail _formToMail;
         static HttpClient client = new HttpClient();
 
-        public ProductFacade(IProductService productService, IUnitOfWorkAsync unitOfWork, IProductTranslationService productTranslationService, IUserProductService userProductService, IUserService userService) : base(unitOfWork)
+        public ProductFacade(IProductService productService, IUnitOfWorkAsync unitOfWork, IProductTranslationService productTranslationService, IUserProductService userProductService, IUserService userService, IFormToMail formToMail) : base(unitOfWork)
         {
             _productService = productService;
             _productTranslationService = productTranslationService;
             _userProductService = userProductService;
             _userService = userService;
-         //   _formToMail = formToMail;
+            _formToMail = formToMail;
+            //   _formToMail = formToMail;
         }
-
-        public ProductFacade(IProductService productService, IProductTranslationService productTranslationService, IUserProductService userProductService, IUserService userService)
+        public ProductFacade(IProductService productService, IProductTranslationService productTranslationService, IUserProductService userProductService, IUserService userService, IFormToMail formToMail)
         {
             _productService = productService;
             _productTranslationService = productTranslationService;
             _userProductService = userProductService;
             _userService = userService;
-      //      _formToMail = formToMail;
+            _formToMail = formToMail;
+            //      _formToMail = formToMail;
         }
         public PagedResultsDto GetAllProducts(string language)
         {
-            var results = _productTranslationService.GetAllProductsTranslation(language);
+            var results = _productTranslationService.GetAllProducts();
             return results;
         }
         public ProductDto GetProduct(long productId)
         {
-            return Mapper.Map<ProductDto>(_productService.Find(productId));
+            var returnVal = new ProductDto();
+            var products = _productService.Query(x => !x.IsDeleted && x.ProductId == productId).Include(p => p.ProductTranslations).Select().OrderBy(x => x.ProductId).FirstOrDefault();
+            returnVal = Mapper.Map<ProductDto>(products);
+            return returnVal;
         }
         public void EditUserProdcutByUserId(long userId, int userConsumer, long productId, Guid backageGuid)
         {
@@ -92,19 +99,26 @@ namespace Subscription.BLL.Services
             userProductObj.CreationTime = DateTime.Now;
             _userProductService.Insert(userProductObj);
             SaveChanges();
-           //_formToMail.SendMail("Product URL", "thanks for your regeistation ", "eng.mohammadabdo@gmail.com");
+
+            //  _formToMail.SendMail("Product URL", "thanks for your regeistation ", "m.abdo@gmggroupsoft.com");
             var userAccountId = _userService.Find(userProductDto.UserId);
-            string url = ConfigurationManager.AppSettings["EcatalogApiUrl"];
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://ecatalogbackend.azurewebsites.net/api/Users/Package");
+
+            var productInfo = GetProduct(userProductObj.ProductId);
+            var url = productInfo.ApiUrl;
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "/Users/Register");
             request.ContentType = "application/json";
             request.Method = "PUT";
             var serializer = JsonConvert.SerializeObject(new
             {
-                maxNumberOfWaiters = userProductObj.UserLimit,
+                userName = userAccountId.Email,
+                password = userAccountId.Password,
                 userAccountId = userAccountId.UserAccountId,
+                isActive = userAccountId.IsActive,
+                maxNumberOfWaiters = userProductObj.UserLimit,
                 packageGuid = userProductObj.BackageGuid,
                 start = userProductObj.StartDate,
                 end = userProductObj.EndDate,
+                productId = userProductObj.ProductId
             });
             using (var streamWriter = new StreamWriter(request.GetRequestStream()))
             {
@@ -136,17 +150,20 @@ namespace Subscription.BLL.Services
             }
             SaveChanges();
 
-            string url = ConfigurationManager.AppSettings["EcatalogApiUrl"];
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "/Users/Package");
-            request.ContentType = "application/json";
-            request.Method = "PUT";
+            var userAccountId = _userService.Find(userProductDto.UserId);
             if (userProductObj != null)
             {
+                var productInfo = GetProduct(userProductObj.ProductId);
+                var url = productInfo.ApiUrl;
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "/Users/Package");
+                request.ContentType = "application/json";
+                request.Method = "PUT";
                 var serializer = JsonConvert.SerializeObject(new
                 {
-                    packageGuid = userProductObj.BackageGuid,
-                    start = userProductObj.StartDate,
-                    end = userProductObj.EndDate,
+                    userAccountId = userAccountId.UserAccountId,
+                    packageGuid = userProductDto.BackageGuid,
+                    start = userProductDto.StartDate,
+                    end = userProductObj.EndDate
                 });
                 using (var streamWriter = new StreamWriter(request.GetRequestStream()))
                 {
@@ -154,18 +171,18 @@ namespace Subscription.BLL.Services
 
                     streamWriter.Write(json);
                 }
-            }
 
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-            {
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                {
 
-                Stream receiveStream = response.GetResponseStream();
-                StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
-                var infoResponse = readStream.ReadToEnd();
+                    Stream receiveStream = response.GetResponseStream();
+                    StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
+                    var infoResponse = readStream.ReadToEnd();
 
-                response.Close();
-                receiveStream.Close();
-                readStream.Close();
+                    response.Close();
+                    receiveStream.Close();
+                    readStream.Close();
+                }
             }
             var userRetuenDto = Mapper.Map<UserProductDto>(userProductObj);
             return userRetuenDto;
@@ -182,5 +199,50 @@ namespace Subscription.BLL.Services
             productObj.ProductTitle = trasnlate.ProductTitle;
             return productObj;
         }
+        public void CreateProduct(ProductDto productDto)
+        {
+            var productObj = Mapper.Map<Product>(productDto);
+            foreach (var productName in productDto.TitleDictionary)
+            {
+                productObj.ProductTranslations.Add(new ProductTranslation
+                {
+                    ProductName = productName.Value,
+                    ProductDescription = productName.Value + " Desc",
+                    Language = productName.Key
+                });
+            }
+            _productTranslationService.InsertRange(productObj.ProductTranslations);
+            _productService.Insert(productObj);
+            SaveChanges();
+        }
+        public void EditProduct(ProductDto productDto)
+        {
+            var productObj = _productService.Find(productDto.ProductId);
+            var producttraObj = _productTranslationService.Query(x => x.ProductId == productDto.ProductId).Select().ToList();
+
+            if (productObj == null) throw new NotFoundException(ErrorCodes.ProductNotFound);
+            //var currencyTrdddanslate = productObj.ProductTranslations.FirstOrDefault(x => x.ProductId == productDto.ProductId);
+
+            foreach (var productName in productDto.TitleDictionary)
+            {
+                var productTranslation = productObj.ProductTranslations.FirstOrDefault(x => x.Language.ToLower() == productName.Key.ToLower() && x.ProductId == productDto.ProductId);
+
+                if (productTranslation == null)
+                {
+                    productObj.ProductTranslations.Add(new ProductTranslation
+                    {
+                        ProductName = productName.Value,
+                        ProductDescription = productName.Value + " Desc",
+                        Language = productName.Key
+                    });
+                }
+                else
+                    productTranslation.ProductName = productName.Value;
+            }
+            productObj.ApiUrl = productDto.ApiUrl;
+            _productService.Update(productObj);
+            SaveChanges();
+        }
+
     }
 }

@@ -29,6 +29,7 @@ namespace Subscription.API.Models
         public DateTime EndDate { get; set; }
         public Guid BackageGuid { get; set; }
         public int ProductCount { get; set; }
+        public long ProductId { get; set; }
 
     }
 }

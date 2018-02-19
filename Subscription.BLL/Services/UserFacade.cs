@@ -86,34 +86,34 @@ namespace Subscription.BLL.Services
             _userService.Insert(userObj);
             SaveChanges();
 
-            string url = ConfigurationManager.AppSettings["EcatalogApiUrl"];
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://ecatalogbackend.azurewebsites.net/api/Users/Register");
-            request.ContentType = "application/json";
-            request.Method = "POST";
-            var serializer = JsonConvert.SerializeObject(new
-            {
-                userName = userObj.Email,
-                password = userObj.Password,
-                userAccountId = userObj.UserAccountId,
-                isActive = userObj.IsActive
-            });
-            using (var streamWriter = new StreamWriter(request.GetRequestStream()))
-            {
-                string json = serializer;
+            //string url = ConfigurationManager.AppSettings["EcatalogApiUrl"];
+            //HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://ecatalogbackend.azurewebsites.net/api/Users/Register");
+            //request.ContentType = "application/json";
+            //request.Method = "POST";
+            //var serializer = JsonConvert.SerializeObject(new
+            //{
+            //    userName = userObj.Email,
+            //    password = userObj.Password,
+            //    userAccountId = userObj.UserAccountId,
+            //    isActive = userObj.IsActive
+            //});
+            //using (var streamWriter = new StreamWriter(request.GetRequestStream()))
+            //{
+            //    string json = serializer;
 
-                streamWriter.Write(json);
-            }
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-            {
+            //    streamWriter.Write(json);
+            //}
+            //using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            //{
 
-                Stream receiveStream = response.GetResponseStream();
-                StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
-                var infoResponse = readStream.ReadToEnd();
+            //    Stream receiveStream = response.GetResponseStream();
+            //    StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
+            //    var infoResponse = readStream.ReadToEnd();
 
-                response.Close();
-                receiveStream.Close();
-                readStream.Close();
-            }
+            //    response.Close();
+            //    receiveStream.Close();
+            //    readStream.Close();
+            //}
             var userRetuenDto = Mapper.Map<UserDto>(userObj);
             return userRetuenDto;
         }
@@ -126,16 +126,10 @@ namespace Subscription.BLL.Services
         }
         public UserDto EditUser(UserDto userDto)
         {
-            var userObj = _userService.Find(userDto.UserId);
-            //  userObj.UserAccountId = Guid.NewGuid();
-            //   userObj.FirstName = userDto.FirstName;
-            // userObj.LastName = userDto.LastName;
-            //  userObj.Email = userDto.Email;
+            var userObj = _userService.Find(userDto.UserId); 
             userObj.Phone1 = (userDto.Phone1 == "" || userDto.Phone1 == "0") ? userDto.Phone1 : userObj.Phone1;
             userObj.Phone2 = (userDto.Phone2 == "" || userDto.Phone2 == "0") ? userDto.Phone2 : null;
-            userObj.Password = (userDto.Password != null) ? PasswordHelper.Encrypt(userDto.Password) : userObj.Password;
-            // userObj.Role = Enums.RoleType.Client;
-            // userObj.CreationTime = DateTime.Now;
+            userObj.Password = (userDto.Password != null) ? PasswordHelper.Encrypt(userDto.Password) : userObj.Password; 
             userObj.IsActive = userDto.IsActive;
             userObj.IsDeleted = false;
             _userService.Update(userObj);

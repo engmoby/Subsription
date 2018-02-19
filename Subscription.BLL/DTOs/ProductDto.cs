@@ -21,6 +21,9 @@ namespace Subscription.BLL.DTOs
         public DateTime? DeletionTime { get; set; }
         public long? DeleterUserId { get; set; }
         public int Price { get; set; }
+        public Dictionary<string, string> TitleDictionary { get; set; }
+        public string ApiUrl { get; set; }
+
 
     }
 }

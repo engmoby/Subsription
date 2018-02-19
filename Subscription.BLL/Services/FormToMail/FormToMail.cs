@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing; 
-using System.Drawing.Imaging;
-using System.IO;
 using System.Net;
 using System.Net.Mail;
-using System.Net.Mime;
 using System.Text.RegularExpressions;
 
-namespace Subscription.BLL.Services.ManageStorage
+namespace Subscription.BLL.Services.FormToMail
 {
 
     public class FormToMail : IFormToMail
@@ -18,7 +13,8 @@ namespace Subscription.BLL.Services.ManageStorage
         {
             try
             {  
-                var msg = new MailMessage { From = new MailAddress(System.Configuration.ConfigurationManager.AppSettings["MailAddress"]) };
+                var msg = new MailMessage { From = new MailAddress("info@mobarkhotel.com") };
+                //var msg = new MailMessage { From = new MailAddress(System.Configuration.ConfigurationManager.AppSettings["MailAddress"]) };
                 if (mailTo != null)
                 {
 
@@ -32,15 +28,19 @@ namespace Subscription.BLL.Services.ManageStorage
                     msg.Body = headerTmp + message + footertmp;
 
                     msg.To.Add(new MailAddress(mailTo));
-                     
 
-                    var mailusername = System.Configuration.ConfigurationManager.AppSettings["Mailusername"];
-                    var mailPassword = System.Configuration.ConfigurationManager.AppSettings["Mailpassword"];
+
+                    //var mailusername = System.Configuration.ConfigurationManager.AppSettings["Mailusername"];
+                    //var mailPassword = System.Configuration.ConfigurationManager.AppSettings["Mailpassword"];
+                    var mailusername = "apikey";
+                    var mailPassword = "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";
 
                     SmtpClient client = new SmtpClient
                     {
-                        Host = System.Configuration.ConfigurationManager.AppSettings["MailHost"],
-                        Port = Int32.Parse(System.Configuration.ConfigurationManager.AppSettings["MailPort"]),
+                        //Host = System.Configuration.ConfigurationManager.AppSettings["MailHost"],
+                        //Port = Int32.Parse(System.Configuration.ConfigurationManager.AppSettings["MailPort"]),
+                        Host = "smtp.sendgrid.net",
+                        Port = 587,
                         UseDefaultCredentials = false,
                         DeliveryMethod = SmtpDeliveryMethod.Network,
                         EnableSsl = true,

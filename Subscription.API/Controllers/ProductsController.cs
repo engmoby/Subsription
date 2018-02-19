@@ -17,19 +17,21 @@ namespace Subscription.API.Controllers
 
         private readonly IProductFacade _productFacade;
         private readonly IUserProductService _userProductService;
+        private readonly IProductService _productService;
         private readonly IProductTranslationService _productTranslationService;
-        public ProductsController(IProductFacade productFacade, IUserProductService userProductService, IProductTranslationService productTranslationService)
+        public ProductsController(IProductFacade productFacade, IUserProductService userProductService, IProductTranslationService productTranslationService, IProductService productService)
         {
             _productFacade = productFacade;
             _userProductService = userProductService;
             _productTranslationService = productTranslationService;
+            _productService = productService;
         }
         [AuthorizeRoles(Enums.RoleType.GlobalAdmin)]
         [Route("api/Products/GetAllProducts", Name = "GetAllProducts")]
         [HttpGet]
         public IHttpActionResult GetAllProducts()
         {
-            var products = _productFacade.GetAllProducts(Language);
+            var products = _productService.GetAllProducts(Page,PageSize);
             var data = Mapper.Map<List<ProductModel>>(products.Data);
 
             return PagedResponse("GetAllProducts", 10, 10, products.TotalCount, data, products.IsParentTranslated);
@@ -82,6 +84,35 @@ namespace Subscription.API.Controllers
             //return PagedResponse("GetUserProductByUserId", Page, PageSize, products.TotalCount, data, products.IsParentTranslated);
             return Ok(backageModel);
         }
+         
+        [AuthorizeRoles(Enums.RoleType.GlobalAdmin)]
+        [Route("api/Products/CreateProduct", Name = "CreateProduct")]
+        [HttpPost]
+        public IHttpActionResult CreateProduct([FromBody] ProductModel productModel)
+        {
+            _productFacade.CreateProduct(Mapper.Map<ProductDto>(productModel));
+            return Ok();
+        }
+
+        [AuthorizeRoles(Enums.RoleType.GlobalAdmin)]
+        [Route("api/Products/EditProduct", Name = "EditProduct")]
+        [HttpPost]
+        public IHttpActionResult EditProduct([FromBody] ProductModel productModel)
+        {
+            _productFacade.EditProduct(Mapper.Map<ProductDto>(productModel));
+            return Ok();
+        }
+
+
+       // [AuthorizeRoles(Enums.RoleType.GlobalAdmin)]
+        [Route("api/Products/GetProduct/{productId:long}", Name = "GetProduct")]
+        [HttpGet]
+        public IHttpActionResult GetProduct(long productId)
+        {
+            var reurnUser = _productFacade.GetProduct(productId);
+            return Ok(reurnUser);
+        }
+
     }
 
 }

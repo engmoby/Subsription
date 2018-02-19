@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Subscription.Common;
 
 namespace Subscription.API.Models
@@ -17,6 +18,8 @@ namespace Subscription.API.Models
         public DateTime? DeletionTime { get; set; }
         public long? DeleterUserId { get; set; }
         public int Price { get; set; }
+        public Dictionary<string, string> TitleDictionary { get; set; }
+        public string ApiUrl { get; set; }
 
     }
 }

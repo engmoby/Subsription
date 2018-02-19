@@ -21,5 +21,6 @@ namespace Subscription.DAL.Entities.Model
         public DateTime? DeletionTime { get; set; }
         public long? DeleterUserId { get; set; }
         public int Price { get; set; }
+        public string ApiUrl { get; set; }
     }
 }

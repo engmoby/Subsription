@@ -19,13 +19,11 @@ namespace Subscription.BLL.DataServices
 
         public PagedResultsDto GetAllProducts(int page, int pageSize)
         {
-            var query = Queryable().Where(x => x.IsActive);
             PagedResultsDto results = new PagedResultsDto();
-            results.TotalCount = query.Select(x => x).Count();
-
-            results.Data = Mapper.Map<List<Product>, List<ProductDto>>(query.OrderBy(x => x.ProductId).Skip((page - 1) * pageSize)
-                .Take(pageSize).ToList());
-
+            results.TotalCount = _repository.Query(x => !x.IsDeleted).Select().Count(x => !x.IsDeleted);
+            //var aaax = _repository.Query(x => !x.IsDeleted).Select().ToList();
+            var products = _repository.Query(x => !x.IsDeleted).Include(p=>p.ProductTranslations).Select().OrderBy(x => x.ProductId).ToList();
+            results.Data = Mapper.Map<List<Product>, List<ProductDto>>(products);
             return results;
         }
         public PagedResultsDto GetProdcutByProductId(long productId)

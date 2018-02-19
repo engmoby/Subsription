@@ -16,7 +16,16 @@ namespace Subscription.BLL.DataServices
         {
             _repository = repository;
         }
-
+        public PagedResultsDto GetAllProducts()
+        {
+            PagedResultsDto results = new PagedResultsDto();
+            results.TotalCount = _repository.Query(x => !x.Product.IsDeleted ).Select(x => x.Product).Count(x => !x.IsDeleted);
+            var aaax = _repository.Query(x => !x.Product.IsDeleted).Select().ToList();
+            var products = _repository.Query(x => !x.Product.IsDeleted ).Select(x => x.Product)
+                .OrderBy(x => x.ProductId).ToList();
+            results.Data = Mapper.Map<List<Product>, List<ProductDto>>(products);
+            return results;
+        }
         public PagedResultsDto GetAllProductsTranslation(string language)
         {
             PagedResultsDto results = new PagedResultsDto();

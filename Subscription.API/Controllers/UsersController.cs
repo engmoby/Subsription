@@ -33,13 +33,13 @@ namespace Subscription.API.Controllers
             _productTranslationService = productTranslationService;
             _productFacade = productFacade;
         }
-        [AuthorizeRoles(Enums.RoleType.GlobalAdmin)] 
+        [AuthorizeRoles(Enums.RoleType.GlobalAdmin)]
         [Route("api/Users", Name = "RegisterUser")]
         [HttpPost]
         public IHttpActionResult RegisterUser([FromBody] UserModel userModel)
         {
             var reurnUser = _userFacade.RegisterUser(Mapper.Map<UserDto>(userModel));
- 
+
             return Ok(reurnUser);
         }
         [AuthorizeRoles(Enums.RoleType.GlobalAdmin)]
@@ -56,7 +56,7 @@ namespace Subscription.API.Controllers
             _productFacade.EditUserProductRequestByUserId(userProduct);
             return Ok(reurnUser);
         }
-        [AuthorizeRoles(Enums.RoleType.GlobalAdmin)]
+
         [Route("api/Users/GetAllUsers", Name = "GetAllUsers")]
         [HttpGet]
         public IHttpActionResult GetAllUsers(int page = Page, int pagesize = PageSize)
@@ -65,7 +65,7 @@ namespace Subscription.API.Controllers
             var userList = Mapper.Map<List<UserModel>>(getAllDataForuser.Data);
             foreach (var userModel in userList)
             {
-               // var productCount = 0;
+                // var productCount = 0;
                 var productList = Mapper.Map<List<UserProductModel>>(_userProductService.GetProdccutByUserId(userModel.UserId).Data);
                 //foreach (var userProductModel in productList)
                 //{
@@ -96,13 +96,16 @@ namespace Subscription.API.Controllers
 
 
         }
-         
+
         [Route("api/Users/EditUserConsumer", Name = "EditUserConsumer")]
         [HttpPost]
         public IHttpActionResult EditUserConsumer([FromBody] UserModel userModel)
         {
             var reurnUser = _userFacade.GetUserByAccountId(userModel.UserAccountId);
-            _productFacade.EditUserProdcutByUserId(reurnUser.UserId, userModel.UserConsumer, 1, userModel.BackageGuid);
+            if (userModel.ProductId == 0)
+                _productFacade.EditUserProdcutByUserId(reurnUser.UserId, userModel.UserConsumer, 1, userModel.BackageGuid);
+            else
+                _productFacade.EditUserProdcutByUserId(reurnUser.UserId, userModel.UserConsumer, userModel.ProductId, userModel.BackageGuid);
             return Ok(reurnUser);
         }
         [AuthorizeRoles(Enums.RoleType.GlobalAdmin)]

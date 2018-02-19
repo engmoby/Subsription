@@ -1,4 +1,4 @@
-﻿    using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,8 +9,9 @@ using Microsoft.Practices.Unity;
 using Subscription.BLL.DataServices;
 using Subscription.BLL.DataServices.Interfaces;
 using Subscription.BLL.DTOs;
-    using Subscription.Common;
-    using Subscription.DAL;
+using Subscription.BLL.Services.FormToMail;
+using Subscription.Common;
+using Subscription.DAL;
 using Subscription.DAL.Entities.Model;
 
 namespace Subscription.BLL
@@ -32,8 +33,10 @@ namespace Subscription.BLL
 
             mapperConfiguration.CreateMap<ProductDto, Product>();
             mapperConfiguration.CreateMap<Product, ProductDto>()
-                .ForMember(dest => dest.ProductTitle, m => m.MapFrom(src => src.ProductTranslations.FirstOrDefault().ProductName))
-                .ForMember(dest => dest.ProductDesc, m => m.MapFrom(src => src.ProductTranslations.FirstOrDefault().ProductDescription));
+                .ForMember(dto => dto.TitleDictionary, m => m.MapFrom(src => src.ProductTranslations.ToDictionary(translation => translation.Language.ToLower(), translation => translation.ProductName)));
+
+            //.ForMember(dest => dest.ProductTitle, m => m.MapFrom(src => src.ProductTranslations.FirstOrDefault().ProductName))
+            //.ForMember(dest => dest.ProductDesc, m => m.MapFrom(src => src.ProductTranslations.FirstOrDefault().ProductDescription));
 
             Mapper.Initialize(mapperConfiguration);
         }
@@ -47,7 +50,8 @@ namespace Subscription.BLL
                 .RegisterType<IProductTranslationService, ProductTranslationService>(new PerResolveLifetimeManager())
                 .RegisterType<IUserProductService, UserProductService>(new PerResolveLifetimeManager())
 
-                .RegisterType<IUserService, UserService>(new PerResolveLifetimeManager());
+                .RegisterType<IUserService, UserService>(new PerResolveLifetimeManager())
+                .RegisterType<IFormToMail, FormToMail>(new PerResolveLifetimeManager());
         }
 
     }

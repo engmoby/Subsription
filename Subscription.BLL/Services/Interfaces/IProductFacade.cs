@@ -14,6 +14,7 @@ namespace Subscription.BLL.Services.Interfaces
         ProductDto GetProductInfo(string lang, long productId);
         UserProduct GetProductByBackageId(UserProductDto userProductDto);
         UserProductDto EditProductRequest(UserProductDto userProductDto);
-
+        void CreateProduct(ProductDto productDto);
+        void EditProduct(ProductDto productDto);
     }
 }

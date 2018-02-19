@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Subscription.BLL.Services.ManageStorage
+namespace Subscription.BLL.Services.FormToMail
 {
     public interface IFormToMail
     {

@@ -119,6 +119,8 @@
     <Compile Include="Services\Interfaces\IRefreshTokenFacade.cs" />
     <Compile Include="Services\Interfaces\IProductFacade.cs" />
     <Compile Include="Services\Interfaces\IUserFacade.cs" />
+    <Compile Include="Services\FormToMail\FormToMail.cs" />
+    <Compile Include="Services\FormToMail\IFormToMail.cs" />
     <Compile Include="Services\ManageStorage\IManageStorage.cs" />
     <Compile Include="Services\ManageStorage\ManageStorage.cs" />
     <Compile Include="Services\RefreshTokenFacade.cs" />
