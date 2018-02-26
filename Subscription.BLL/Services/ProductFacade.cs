@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using AutoMapper;
 using Newtonsoft.Json;
 using Subscription.BLL.DataServices.Interfaces;
@@ -62,7 +63,7 @@ namespace Subscription.BLL.Services
             returnVal = Mapper.Map<ProductDto>(products);
             return returnVal;
         }
-        public void EditUserProdcutByUserId(long userId, int userConsumer, long productId, Guid backageGuid)
+        public void EditUserProdcutByUserId(long userId, int userConsumer, Guid backageGuid)
         {
             var query = _userProductService.Query(x => x.UserId == userId && x.BackageGuid == backageGuid).Select().FirstOrDefault();
             if (query != null) query.UserConsumer = userConsumer;
@@ -105,20 +106,20 @@ namespace Subscription.BLL.Services
 
             var productInfo = GetProduct(userProductObj.ProductId);
             var url = productInfo.ApiUrl;
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "/Users/Register");
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "/api/Users/Register");
             request.ContentType = "application/json";
-            request.Method = "PUT";
+            request.Method = "POST";
             var serializer = JsonConvert.SerializeObject(new
             {
                 userName = userAccountId.Email,
                 password = userAccountId.Password,
                 userAccountId = userAccountId.UserAccountId,
                 isActive = userAccountId.IsActive,
-                maxNumberOfWaiters = userProductObj.UserLimit,
+                limit = userProductObj.UserLimit,
                 packageGuid = userProductObj.BackageGuid,
                 start = userProductObj.StartDate,
                 end = userProductObj.EndDate,
-                productId = userProductObj.ProductId
+               // productId = userProductObj.ProductId
             });
             using (var streamWriter = new StreamWriter(request.GetRequestStream()))
             {
@@ -138,6 +139,11 @@ namespace Subscription.BLL.Services
                 receiveStream.Close();
                 readStream.Close();
             }
+            string body = PopulateBody(url, userAccountId.FirstName + " " + userAccountId.LastName, userAccountId.Email,
+                PasswordHelper.Decrypt(userAccountId.Password), productInfo.TitleDictionary.Values.ElementAt(0), userProductObj.UserLimit.ToString(),
+                userProductObj.StartDate.ToShortDateString(), userProductObj.EndDate.ToShortDateString());
+
+            SendHtmlFormattedEmail(userAccountId.Email, "Account Details", body);
         }
         public UserProductDto EditProductRequest(UserProductDto userProductDto)
         {
@@ -155,7 +161,7 @@ namespace Subscription.BLL.Services
             {
                 var productInfo = GetProduct(userProductObj.ProductId);
                 var url = productInfo.ApiUrl;
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "/Users/Package");
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "/api/Users/Package");
                 request.ContentType = "application/json";
                 request.Method = "PUT";
                 var serializer = JsonConvert.SerializeObject(new
@@ -196,7 +202,7 @@ namespace Subscription.BLL.Services
             var productObj = Mapper.Map<ProductDto>(_productService.Find(productId));
             var trasnlate = _productTranslationService.ProductTranslationByProductId(lang, productObj.ProductId);
 
-            productObj.ProductTitle = trasnlate.ProductTitle;
+            productObj.ProductTitle = trasnlate.TitleDictionary.Values.ElementAt(0);
             return productObj;
         }
         public void CreateProduct(ProductDto productDto)
@@ -243,6 +249,39 @@ namespace Subscription.BLL.Services
             _productService.Update(productObj);
             SaveChanges();
         }
+        private string PopulateBody(string url, string username, string email, string password, string productTitle,
+            string backageCount, string start, string end)
+        {
+            string body;
+            using (StreamReader reader = new StreamReader(HttpContext.Current.Server.MapPath("~/MailTemplate.html")))
+            {
+                body = reader.ReadToEnd();
+            }
+            body = body.Replace("{Url}", url);
+            body = body.Replace("{Email}", email);
+            body = body.Replace("{UserName}", username);
+            body = body.Replace("{Password}", password);
+            body = body.Replace("{ProductTitle}", productTitle);
+            body = body.Replace("{BackageCount}", backageCount);
+            body = body.Replace("{Start}", start);
+            body = body.Replace("{End}", end);
+            return body;
+        }
+        private void SendHtmlFormattedEmail(string recepientEmail, string subject, string body)
+        {
+            string FromMail = "gmggroupsoftware@gmail.com";
+            MailMessage mail = new MailMessage();
+            SmtpClient SmtpServer = new SmtpClient("in-v3.mailjet.com");
+            mail.From = new MailAddress(FromMail);
+            mail.To.Add(recepientEmail);
+            mail.Subject = subject;
+            mail.IsBodyHtml = true;
+            mail.Body = body;
+            SmtpServer.Port = 587;
+            SmtpServer.Credentials = new System.Net.NetworkCredential("9d7c1de804eabdf8fedf498bffadd546", "93187ce363c3beb198214badc25cdc3c");
+            SmtpServer.EnableSsl = false;
+            SmtpServer.Send(mail);
 
+        }
     }
 }

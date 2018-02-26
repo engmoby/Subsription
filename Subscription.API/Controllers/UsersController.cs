@@ -63,29 +63,29 @@ namespace Subscription.API.Controllers
         {
             var getAllDataForuser = _userService.GetAllUsers(page, pagesize);
             var userList = Mapper.Map<List<UserModel>>(getAllDataForuser.Data);
-            foreach (var userModel in userList)
-            {
-                // var productCount = 0;
-                var productList = Mapper.Map<List<UserProductModel>>(_userProductService.GetProdccutByUserId(userModel.UserId).Data);
-                //foreach (var userProductModel in productList)
-                //{
-                //    productCount++;
-                //    //userModel.UserLimit = userProductModel.UserLimit;
-                //    //userModel.UserConsumer = userProductModel.UserConsumer;
-                //    //userModel.StartDate = userProductModel.StartDate;
-                //    //userModel.EndDate = userProductModel.EndDate;
-                //    //var productInfo = Mapper.Map<List<ProductModel>>(_productTranslationService.GetProductTranslationByProductId(Language, userProductModel.ProductId).Data);
+            //foreach (var userModel in userList)
+            //{
+            //    // var productCount = 0;
+            //    var productList = Mapper.Map<List<UserProductModel>>(_userProductService.GetProdccutByUserId(userModel.UserId).Data);
+            //    //foreach (var userProductModel in productList)
+            //    //{
+            //    //    productCount++;
+            //    //    //userModel.UserLimit = userProductModel.UserLimit;
+            //    //    //userModel.UserConsumer = userProductModel.UserConsumer;
+            //    //    //userModel.StartDate = userProductModel.StartDate;
+            //    //    //userModel.EndDate = userProductModel.EndDate;
+            //    //    //var productInfo = Mapper.Map<List<ProductModel>>(_productTranslationService.GetProductTranslationByProductId(Language, userProductModel.ProductId).Data);
 
-                //    //foreach (var productModel in productInfo)
-                //    //{
-                //    //    productCount++;
-                //    //    userModel.UserProductTitle = productModel.ProductTitle;
-                //    //}
+            //    //    //foreach (var productModel in productInfo)
+            //    //    //{
+            //    //    //    productCount++;
+            //    //    //    userModel.UserProductTitle = productModel.ProductTitle;
+            //    //    //}
 
-                //}
-                userModel.ProductCount = productList.Count;
+            //    //}
+            //    userModel.ProductCount = productList.Count;
 
-            }
+            //}
 
             PagedResultsDto results = new PagedResultsDto();
             results.TotalCount = getAllDataForuser.TotalCount;
@@ -102,10 +102,10 @@ namespace Subscription.API.Controllers
         public IHttpActionResult EditUserConsumer([FromBody] UserModel userModel)
         {
             var reurnUser = _userFacade.GetUserByAccountId(userModel.UserAccountId);
-            if (userModel.ProductId == 0)
-                _productFacade.EditUserProdcutByUserId(reurnUser.UserId, userModel.UserConsumer, 1, userModel.BackageGuid);
-            else
-                _productFacade.EditUserProdcutByUserId(reurnUser.UserId, userModel.UserConsumer, userModel.ProductId, userModel.BackageGuid);
+            //if (userModel.ProductId == 0)
+            //    _productFacade.EditUserProdcutByUserId(reurnUser.UserId, userModel.UserConsumer,  userModel.BackageGuid);
+            //else
+                _productFacade.EditUserProdcutByUserId(reurnUser.UserId, userModel.UserConsumer,   userModel.BackageGuid);
             return Ok(reurnUser);
         }
         [AuthorizeRoles(Enums.RoleType.GlobalAdmin)]

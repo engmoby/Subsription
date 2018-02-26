@@ -8,6 +8,7 @@ namespace Subscription.DAL.Entities.Model
         public long UserProductId { get; set; }
         public long ProductId { get; set; }
         public long UserId { get; set; }
+        public Guid BackageGuid { get; set; }
         public bool IsDeleted { get; set; }
         public int UserLimit { get; set; }
         public int UserConsumer { get; set; }
@@ -20,6 +21,6 @@ namespace Subscription.DAL.Entities.Model
         public long? CreatorUserId { get; set; }
         public DateTime? DeletionTime { get; set; }
         public long? DeleterUserId { get; set; }
-        public Guid BackageGuid { get; set; }
+         
     }
 }

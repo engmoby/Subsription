@@ -21,8 +21,7 @@ namespace Subscription.BLL
         public static void RegisterMappings(MapperConfigurationExpression mapperConfiguration)
         {
             mapperConfiguration.CreateMap<User, UserDto>()
-                .ForMember(dto => dto.Password,
-                    m => m.MapFrom(src => PasswordHelper.Decrypt(src.Password)));
+                .ForMember(dto => dto.Password,m => m.MapFrom(src => PasswordHelper.Decrypt(src.Password)));
             mapperConfiguration.CreateMap<UserDto, User>();
 
             mapperConfiguration.CreateMap<Background, BackgroundDto>();

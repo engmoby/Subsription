@@ -20,6 +20,7 @@ namespace Subscription.BLL.DataServices
 
         public PagedResultsDto GetProdccutByUserId(long userId)
         {
+           // var products = _repository.Query(x => !x.IsDeleted).Include(p => p.ProductTranslations).Select().OrderBy(x => x.ProductId).ToList();
             List<UserProduct> query = Queryable().Where(x => x.UserId == userId).ToList();
             PagedResultsDto results = new PagedResultsDto();
             results.TotalCount = query.Select(x => x).Count();

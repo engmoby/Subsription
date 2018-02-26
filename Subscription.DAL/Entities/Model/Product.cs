@@ -8,9 +8,9 @@ namespace Subscription.DAL.Entities.Model
     {
         public Product()
         {
-            ProductTranslations= new List<ProductTranslation>();
+            ProductTranslations= new List<ProductTranslation>(); 
         }
-        public ICollection<ProductTranslation> ProductTranslations { get; set; }
+        public ICollection<ProductTranslation> ProductTranslations { get; set; } 
         public long ProductId { get; set; } 
         public bool IsActive { get; set; }
         public bool IsDeleted { get; set; }

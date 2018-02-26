@@ -27,17 +27,23 @@ namespace Subscription.BLL.Services
     public class UserFacade : BaseFacade, IUserFacade
     {
         private readonly IUserService _userService;
+        private readonly IProductFacade _productFacade;
+        private readonly IUserProductService _productService;
         //static HttpClient client = new HttpClient();
         static string url = ConfigurationManager.AppSettings["EcatalogApiUrl"];
 
-        public UserFacade(IUserService userService, IUnitOfWorkAsync unitOfWork) : base(unitOfWork)
+        public UserFacade(IUserService userService, IUnitOfWorkAsync unitOfWork, IProductFacade productFacade, IUserProductService productService) : base(unitOfWork)
         {
             _userService = userService;
+            _productFacade = productFacade;
+            _productService = productService;
         }
 
-        public UserFacade(IUserService userService)
+        public UserFacade(IUserService userService, IProductFacade productFacade, IUserProductService productService)
         {
             _userService = userService;
+            _productFacade = productFacade;
+            _productService = productService;
         }
         public UserDto ValidateUser(string email, string password)
         {
@@ -126,44 +132,60 @@ namespace Subscription.BLL.Services
         }
         public UserDto EditUser(UserDto userDto)
         {
-            var userObj = _userService.Find(userDto.UserId); 
+            var userObj = _userService.Find(userDto.UserId);
             userObj.Phone1 = (userDto.Phone1 == "" || userDto.Phone1 == "0") ? userDto.Phone1 : userObj.Phone1;
             userObj.Phone2 = (userDto.Phone2 == "" || userDto.Phone2 == "0") ? userDto.Phone2 : null;
-            userObj.Password = (userDto.Password != null) ? PasswordHelper.Encrypt(userDto.Password) : userObj.Password; 
+            userObj.Password = (userDto.Password != null) ? PasswordHelper.Encrypt(userDto.Password) : userObj.Password;
             userObj.IsActive = userDto.IsActive;
             userObj.IsDeleted = false;
             _userService.Update(userObj);
             SaveChanges();
+            List<int> proudctList = new List<int>();
 
-            string url = ConfigurationManager.AppSettings["EcatalogApiUrl"];
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "/Users");
-            request.ContentType = "application/json";
-            request.Method = "PUT";
-            var serializer = JsonConvert.SerializeObject(new
+            //var proudctCount = _productFacade.GetAllProducts(Strings.DefaultLanguage).TotalCount;
+            var userProudctList = _productService.GetProdccutByUserId(userObj.UserId);
+            foreach (var objDto in (List<UserProductDto>)userProudctList.Data)
             {
-                userName = userObj.Email,
-                password = userObj.Password,
-                userAccountId = userObj.UserAccountId,
-                isActive = userObj.IsActive
-            });
-            using (var streamWriter = new StreamWriter(request.GetRequestStream()))
-            {
-                string json = serializer;
+                var productid = Convert.ToInt32(objDto.ProductId);
+                if (!proudctList.Contains(productid))
+                    proudctList.Add(productid);
 
-                streamWriter.Write(json);
             }
-
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            foreach (var i in proudctList)
             {
+                var productInfo = _productFacade.GetProduct(i);
+                var url = productInfo.ApiUrl;
+                //string url = ConfigurationManager.AppSettings["EcatalogApiUrl"];
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "/api/Users");
+                request.ContentType = "application/json";
+                request.Method = "PUT";
+                var serializer = JsonConvert.SerializeObject(new
+                {
+                    userName = userObj.Email,
+                    password = userObj.Password,
+                    userAccountId = userObj.UserAccountId,
+                    isActive = userObj.IsActive
+                });
+                using (var streamWriter = new StreamWriter(request.GetRequestStream()))
+                {
+                    string json = serializer;
 
-                Stream receiveStream = response.GetResponseStream();
-                StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
-                var infoResponse = readStream.ReadToEnd();
+                    streamWriter.Write(json);
+                }
 
-                response.Close();
-                receiveStream.Close();
-                readStream.Close();
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                {
+
+                    Stream receiveStream = response.GetResponseStream();
+                    StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
+                    var infoResponse = readStream.ReadToEnd();
+
+                    response.Close();
+                    receiveStream.Close();
+                    readStream.Close();
+                }
             }
+          
             var userRetuenDto = Mapper.Map<UserDto>(userObj);
             return userRetuenDto;
         }

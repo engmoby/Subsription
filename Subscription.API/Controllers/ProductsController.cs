@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Web.Http;
 using AutoMapper;
 using Subscription.API.Infrastructure;
@@ -54,7 +55,7 @@ namespace Subscription.API.Controllers
             var products = _userProductService.GetProdccutByUserId(UserId);
             foreach (var product in (List<UserProductDto>)products.Data)
             {
-                product.ProductTitle = _productTranslationService.ProductTranslationByProductId(Language, product.ProductId).ProductTitle;
+                product.ProductTitle = _productTranslationService.ProductTranslationByProductId(Language, product.ProductId).TitleDictionary.Values.ElementAt(0); ;
             }
             var data = Mapper.Map<List<UserProductModel>>(products.Data);
 
